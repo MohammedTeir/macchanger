@@ -6,9 +6,9 @@ RootMAC is a Flutter-based Android application designed for users with rooted de
 
 ---
 
-## 2. Project Outline (Final State)
+## 2. Project Outline
 
-This section documents the final implemented style, design, and features of the application.
+This section documents the implemented style, design, features, and structure of the application.
 
 ### Style & Design
 
@@ -20,57 +20,54 @@ This section documents the final implemented style, design, and features of the 
 *   **Typography (Google Fonts):**
     *   **Headlines/Titles:** `Orbitron`
     *   **Monospaced/Data:** `Inconsolata`
-    *   **Hero/Display:** `Ocra Iscry`
 *   **Layout:**
-    *   The main screen uses a `ListView` containing `Card` elements for logical grouping of information (Compatibility, Status, Advanced).
-    *   UI is responsive and scrolls vertically.
+    *   The main screen uses a `ListView` containing `Card` elements for logical grouping of information.
     *   Consistent padding and spacing are used for a clean look.
-*   **Components:**
-    *   `ElevatedButton` for primary actions.
-    *   `OutlinedButton` for secondary actions (Restore).
-    *   `SwitchListTile` for toggling advanced features.
-    *   `AlertDialog` for user input (manual MAC change, profile creation).
-    *   `SnackBar` for providing user feedback.
-    *   `RefreshIndicator` for pull-to-refresh functionality.
+
+### Code Structure & Refactoring
+
+*   **UI Modularity:** The main UI (`HomePage`) has been refactored into smaller, reusable widgets, each with its own file in the `lib/widgets/` directory:
+    *   `compatibility_card.dart`
+    *   `status_card.dart`
+    *   `advanced_card.dart`
+    *   `actions_card.dart`
+*   **Separation of Concerns:** This refactoring improves code readability, maintainability, and follows Flutter best practices by separating distinct UI components into their own files.
 
 ### Features Implemented
 
-*   **Phase 1: Core Functionality**
-    *   **Root & Compatibility Check:**
-        *   Detects if the device is rooted.
-        *   Checks for `BusyBox` and `iproute2` binaries.
-        *   Displays the status of these checks in the "COMPATIBILITY" card.
-    *   **MAC Address Engine (`mac_changer.dart`):**
-        *   Retrieves the current MAC address for the `wlan0` interface.
-        *   Changes the MAC address using a fallback chain of root commands:
-            1.  `ip link`
-            2.  `ifconfig`
-            3.  Direct write to `/sys/class/net/wlan0/address`
-    *   **Core UI Actions:**
-        *   **Change MAC:** Opens a dialog to manually input and apply a new MAC address.
-        *   **Random MAC:** Generates and applies a valid, locally administered, unicast MAC address.
-        *   **Restore Original:** Re-applies the MAC address that was captured when the app first started.
-*   **Phase 2: Profiles & Automation**
-    *   **Local Database (`database_helper.dart`):**
-        *   Uses `sqflite` to create and manage a local `profiles.db` SQLite database.
-        *   Stores profiles with a name and MAC address.
-    *   **Profiles Screen (`profiles_screen.dart`):**
-        *   Navigated to via the "Profiles" button.
-        *   Displays a list of all saved profiles.
-        *   Allows users to **Create, Edit, and Delete** profiles through dialogs.
-        *   Allows users to apply a MAC address by tapping an item in the list.
-*   **Phase 3: Advanced Features**
-    *   **Network Change Detection (`network_watcher.dart`):**
-        *   Uses `connectivity_plus` to subscribe to network state changes.
-    *   **Automatic Randomization:**
-        *   An "Auto Randomize MAC" switch is available in the "ADVANCED" card.
-        *   When enabled, the app listens for network changes and automatically applies a new random MAC address upon connection.
-        *   The feature is disabled and the listener is disposed of when the switch is turned off or the app is closed.
+*   **Core Functionality:**
+    *   **Root & Compatibility Check:** Detects root access, `BusyBox`, and `iproute2`.
+    *   **MAC Address Engine (`mac_changer.dart`):** Retrieves and changes the MAC address using root commands.
+    *   **Core UI Actions:** Manual MAC change, random MAC generation, and restoring the original MAC.
+*   **Profiles & Automation:**
+    *   **Local Database (`database_helper.dart`):** Uses `sqflite` to store and manage MAC address profiles.
+    *   **Profiles Screen (`profiles_screen.dart`):** Allows for creating, editing, deleting, and applying saved profiles.
+*   **Advanced Features:**
+    *   **Network Change Detection (`network_watcher.dart`):** Uses `connectivity_plus` to monitor network state.
+    *   **Automatic Randomization:** An advanced option to automatically randomize the MAC address upon a new network connection.
+
+### Continuous Integration & Deployment (CI/CD)
+
+*   **GitHub Actions Workflow (`.github/workflows/build.yml`):**
+    *   A CI/CD pipeline is configured to automatically trigger on every push to the `main` branch.
+    *   **Jobs:**
+        1.  **Checkout:** Checks out the repository code.
+        2.  **Set up Flutter:** Initializes the Flutter environment.
+        3.  **Install Dependencies:** Runs `flutter pub get`.
+        4.  **Analyze:** Runs `flutter analyze` to check for code quality issues.
+        5.  **Authenticate to Google Cloud:** Securely logs into Google Cloud using a `FIREBASE_SERVICE_ACCOUNT` secret.
+        6.  **Build:** Compiles the Flutter application for the web (`flutter build web`).
+        7.  **Deploy:** Deploys the built web application to Firebase Hosting.
+    *   **Secrets Management:** The workflow relies on GitHub repository secrets (`FIREBASE_SERVICE_ACCOUNT`, `FIREBASE_PROJECT_ID`) for secure authentication.
 
 ---
 
 ## 3. Current Plan
 
+**Task: Finalize and Document Recent Changes**
+
 **Status: Completed**
 
-All planned phases have been fully implemented. The application is now feature-complete according to this blueprint.
+1.  **UI Refactoring:** Decomposed the main UI into smaller, more manageable widgets to improve code organization. (Done)
+2.  **CI/CD Implementation:** Created a GitHub Actions workflow to automate the build and deployment process to Firebase Hosting. (Done)
+3.  **Documentation:** Updated this `blueprint.md` to reflect the latest structural changes and the new CI/CD pipeline. (Done)

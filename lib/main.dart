@@ -9,6 +9,10 @@ import 'network_info_provider.dart' as network_info;
 import 'mac_changer.dart';
 import 'profiles_screen.dart';
 import 'network_watcher.dart';
+import 'widgets/compatibility_card.dart';
+import 'widgets/status_card.dart';
+import 'widgets/advanced_card.dart';
+import 'widgets/actions_card.dart';
 
 void main() {
   runApp(
@@ -306,166 +310,41 @@ class _HomePageState extends State<HomePage> {
               child: ListView(
                 padding: const EdgeInsets.all(16.0),
                 children: <Widget>[
-                  Card(
-                    elevation: 4,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('COMPATIBILITY', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Theme.of(context).colorScheme.secondary)),
-                          const SizedBox(height: 12),
-                          CompatibilityCheckRow(label: 'Root Access:', status: _isRooted),
-                          const Divider(),
-                          CompatibilityCheckRow(label: 'BusyBox:', status: _hasBusyBox),
-                          const Divider(),
-                          CompatibilityCheckRow(label: 'iproute2:', status: _hasIproute2),
-                        ],
-                      ),
-                    ),
+                  CompatibilityCard(
+                    isRooted: _isRooted,
+                    hasBusyBox: _hasBusyBox,
+                    hasIproute2: _hasIproute2,
                   ),
                   const SizedBox(height: 16),
-                  Card(
-                    elevation: 4,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('STATUS', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Theme.of(context).colorScheme.secondary)),
-                          const SizedBox(height: 12),
-                          InfoRow(label: 'Current MAC:', value: _currentMac ?? 'N/A'),
-                          const Divider(height: 20),
-                          InfoRow(label: 'Interface:', value: _selectedInterface?.name ?? 'wlan0'),
-                          const Divider(height: 20),
-                          InfoRow(label: 'IP Address:', value: _selectedInterface?.ipAddress ?? 'N/A'),
-                        ],
-                      ),
-                    ),
+                  StatusCard(
+                    currentMac: _currentMac,
+                    selectedInterface: _selectedInterface,
                   ),
                   const SizedBox(height: 16),
-                  Card(
-                    elevation: 4,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('ADVANCED', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Theme.of(context).colorScheme.secondary)),
-                          const SizedBox(height: 12),
-                          SwitchListTile(
-                            title: Text('Auto Randomize MAC', style: Theme.of(context).textTheme.bodyMedium),
-                            subtitle: Text('Randomize MAC on network change', style: Theme.of(context).textTheme.bodySmall),
-                            value: _autoRandomize,
-                            onChanged: _toggleAutoRandomization,
-                            secondary: const Icon(Icons.wifi_tethering),
-                          ),
-                        ],
-                      ),
-                    ),
+                  AdvancedCard(
+                    autoRandomize: _autoRandomize,
+                    onToggleAutoRandomization: _toggleAutoRandomization,
                   ),
                   const SizedBox(height: 32),
-                  ElevatedButton.icon(
-                    icon: const Icon(Icons.shuffle),
-                    onPressed: () {
+                  ActionsCard(
+                    onRandomMac: () {
                       final randomMac = _generateRandomMac();
                       _macController.text = randomMac;
                       _changeMac(randomMac);
                     },
-                    label: const Text('Random MAC'),
-                  ),
-                  const SizedBox(height: 12),
-                  ElevatedButton.icon(
-                    icon: const Icon(Icons.edit),
-                    onPressed: _showChangeMacDialog,
-                    label: const Text('Change MAC'),
-                  ),
-                  const SizedBox(height: 12),
-                  ElevatedButton.icon(
-                    icon: const Icon(Icons.list),
-                    onPressed: _navigateToProfilesScreen,
-                    label: const Text('Profiles'),
-                  ),
-                  const SizedBox(height: 12),
-                  OutlinedButton.icon(
-                    icon: const Icon(Icons.restore),
-                    onPressed: () {
+                    onChangeMac: _showChangeMacDialog,
+                    onNavigateToProfiles: _navigateToProfilesScreen,
+                    onRestoreOriginal: () {
                       if (_originalMac != null) {
                         _changeMac(_originalMac!);
                       } else {
                         _showSnackbar('Original MAC not saved.', isError: true);
                       }
                     },
-                    label: const Text('Restore Original'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Theme.of(context).colorScheme.secondary,
-                      side: BorderSide(color: Theme.of(context).colorScheme.secondary),
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    ),
                   ),
-                  const SizedBox(height: 20),
                 ],
               ),
             ),
-    );
-  }
-}
-
-class InfoRow extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const InfoRow({super.key, required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold)),
-        Text(value, style: GoogleFonts.inconsolata(fontSize: 16, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
-      ],
-    );
-  }
-}
-
-class CompatibilityCheckRow extends StatelessWidget {
-  final String label;
-  final bool? status;
-
-  const CompatibilityCheckRow({super.key, required this.label, this.status});
-
-  @override
-  Widget build(BuildContext context) {
-    Widget statusIcon;
-    Color statusColor;
-    String statusText;
-
-    if (status == null) {
-      statusIcon = const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2));
-      statusColor = Colors.grey;
-      statusText = 'Checking...';
-    } else if (status == true) {
-      statusIcon = const Icon(Icons.check_circle, color: Colors.green);
-      statusColor = Colors.green;
-      statusText = 'Detected';
-    } else {
-      statusIcon = const Icon(Icons.cancel, color: Colors.red);
-      statusColor = Colors.red;
-      statusText = 'Not Found';
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        children: [
-          Text(label, style: Theme.of(context).textTheme.bodyMedium),
-          const Spacer(),
-          statusIcon,
-          const SizedBox(width: 8),
-          Text(statusText, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: statusColor, fontWeight: FontWeight.bold)),
-        ],
-      ),
     );
   }
 }
