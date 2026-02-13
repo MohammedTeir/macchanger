@@ -18,12 +18,16 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: '11'
+          java-version: '17'
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+
+      - name: Accept Android Licenses
+        run: flutter doctor --android-licenses
+        continue-on-error: true
 
       - name: Get Flutter dependencies
         run: flutter pub get
